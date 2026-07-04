@@ -65,14 +65,32 @@ additional/             Example .crproj files
 
 ## CI/CD
 
+GitHub Actions minutes are limited, so the cloud pipeline runs the full build only
+where it's actually required: the `develop → main` release path. Day-to-day
+validation on `develop` is done locally with [`scripts/local-ci.sh`](../scripts/local-ci.sh),
+which mirrors the same build, test and coverage steps offline.
+
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | Push to `master`, `pre-release`, `feature/**`, `fix/**` + PRs to `master`/`pre-release` | Build, package, create releases |
-| `test.yml` | Push to `master`, `pre-release`, `feature/**`, `fix/**` + PRs to `master`/`pre-release` | Build, test, coverage report |
-| `format.yml` | Every push | Code style and Roslyn analyzer checks |
+| `ci.yml` | PR into `main`. Manual: `run-ci` label on a `develop` PR, or `workflow_dispatch` | Build + package (validation only) |
+| `test.yml` | PR into `main`. Manual: `run-ci` label on a `develop` PR, or `workflow_dispatch` | Build, test, coverage report |
+| `lint.yml` | PR into `main`. Manual: `run-ci` label on a `develop` PR, or `workflow_dispatch` | Whitespace, style, Roslyn analyzers |
+| `release.yml` | Manual (`workflow_dispatch`) + monthly (1st of month) | Build, tag and publish a GitHub Release from `main` |
 | `codeql-analysis.yml` | Weekly + manual | Security analysis |
 
-Releases are created automatically by `ci.yml`:
-- Push to `main` branch creates a stable versioned release with a git tag
+**PRs into `develop` do not run the cloud pipeline automatically** — validate them
+with `scripts/local-ci.sh`. To run a workflow on a specific `develop` PR anyway, an
+admin adds the `run-ci` label (re-add it to trigger each subsequent run) or
+dispatches the workflow manually from the Actions tab.
+
+### Releases
+
+Releases are **not** cut automatically on push to `main`. `release.yml` handles them:
+
+- **Manual** — Actions tab → **release** → **Run workflow** (on `main`). Builds, tags
+  `v<version>`, and publishes a GitHub Release with the CLI/GUI/combined zips and the
+  MSBuild-tasks nupkg. Use the `force` input to release even with no new commits.
+- **Monthly** — on the 1st of each month a cheap check compares `main` to the last
+  `v*` tag and only runs the (expensive) build+publish when there are new commits.
 
 Versioning is handled by [Nerdbank.GitVersioning](https://github.com/dotnet/Nerdbank.GitVersioning) from `version.json`.

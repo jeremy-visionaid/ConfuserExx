@@ -40,3 +40,10 @@ gh-pages/
 
 .idea/
 **/*out*
+
+# Local CI artifacts
+test-results/
+coverage/
+
+# Release packages (produced by the CI/local-ci package step)
+*.zip
