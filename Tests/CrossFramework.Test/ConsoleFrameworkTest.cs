@@ -95,7 +95,7 @@ namespace CrossFramework.Test {
 		[Trait("Protection", "resources")]
 		[Trait("Issue", "https://github.com/mcpolo99/ConfuserExx/issues/101")]
 		public Task Console_Net10_ResourceProtection() =>
-			Run("CrossFramework.Console.Net10.dll",
+			Run(new[] { "CrossFramework.Console.Net10.dll", "external:CrossFramework.Console.Net10.runtimeconfig.json" },
 				null,
 				new SettingItem<Protection>("resources"),
 				outputDirSuffix: "-console-net10-resources",
